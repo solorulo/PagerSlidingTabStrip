@@ -48,6 +48,10 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 	public interface IconTabProvider {
 		public int getPageIconResId(int position);
 	}
+	
+	public interface IconTextTabProvider extends IconTabProvider {
+		public boolean showTitle();
+	}
 
 	// @formatter:off
 	private static final int[] ATTRS = new int[] {
@@ -193,11 +197,17 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		tabCount = pager.getAdapter().getCount();
 
 		for (int i = 0; i < tabCount; i++) {
-
+			CharSequence title = pager.getAdapter().getPageTitle(i);
 			if (pager.getAdapter() instanceof IconTabProvider) {
-				addIconTab(i, ((IconTabProvider) pager.getAdapter()).getPageIconResId(i));
+				IconTabProvider itp = (IconTabProvider) pager.getAdapter();
+				if (itp instanceof IconTextTabProvider && ((IconTextTabProvider) itp).showTitle()) {
+					addTextImageTab(i, title.toString(), itp.getPageIconResId(i));
+				}
+				else {
+					addIconTab(i, itp.getPageIconResId(i));
+				}
 			} else {
-				addTextTab(i, pager.getAdapter().getPageTitle(i).toString());
+				addTextTab(i, title.toString());
 			}
 
 		}
@@ -232,6 +242,21 @@ public class PagerSlidingTabStrip extends HorizontalScrollView {
 		tab.setSingleLine();
 
 		addTab(position, tab);
+	}
+	
+	private void addTextImageTab(final int position, String title, int leftResId, int topResId, int rightResId, int bottomResId) {
+		TextView tab = new TextView(getContext());
+		tab.setText(title);
+		tab.setGravity(Gravity.CENTER);
+		tab.setSingleLine();
+		tab.setCompoundDrawablesWithIntrinsicBounds(leftResId, topResId, rightResId, bottomResId);
+		float padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10, getResources().getDisplayMetrics());
+		tab.setCompoundDrawablePadding((int) (padding + 0.5f));
+		addTab(position, tab);
+	}
+	
+	private void addTextImageTab(final int position, String title, int topResId) {
+		addTextImageTab(position, title, 0, topResId, 0, 0);
 	}
 
 	private void addIconTab(final int position, int resId) {
